@@ -5,12 +5,21 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const sessionToken = request.cookies.get("session_token");
 
-  // Auth routes
+  // Public routes that don't require authentication
+  const isPublicRoute =
+    pathname.startsWith("/login") || 
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms");
+
+  // Auth routes that should redirect if already authenticated
   const isAuthRoute =
     pathname.startsWith("/login") || pathname.startsWith("/signup");
 
-  // Protected routes - everything that's not an auth route
-  const isProtectedRoute = !isAuthRoute;
+  // Protected routes - everything that's not a public route
+  const isProtectedRoute = !isPublicRoute;
 
   if (isProtectedRoute && !sessionToken) {
     return NextResponse.redirect(new URL("/login", request.url));

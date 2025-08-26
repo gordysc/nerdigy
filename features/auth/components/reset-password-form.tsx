@@ -14,15 +14,12 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signup } from "../actions";
+import { resetPassword } from "../actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const formSchema = z
   .object({
-    email: z.string().email({
-      message: "Please enter a valid email address."
-    }),
     password: z.string().min(6, {
       message: "Password must be at least 6 characters."
     }),
@@ -33,17 +30,17 @@ const formSchema = z
     path: ["confirmPassword"]
   });
 
-export function SignupForm({
+export function ResetPasswordForm({
+  token,
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: { token: string } & React.ComponentProps<"div">) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
       password: "",
       confirmPassword: ""
     }
@@ -52,49 +49,35 @@ export function SignupForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    const result = await signup(values.email, values.password);
+    const result = await resetPassword(token, values.password);
 
     if (result.error) {
-      form.setError("email", {
+      form.setError("password", {
         type: "manual",
         message: result.error
       });
       setIsLoading(false);
     } else {
-      router.push("/");
-      router.refresh();
+      router.push("/login?reset=success");
     }
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Create an account</h1>
+        <h1 className="text-2xl font-bold">Reset your password</h1>
         <p className="text-muted-foreground text-sm text-balance">
-          Enter your email below to create your account
+          Enter your new password below
         </p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
           <FormField
             control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="m@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>New Password</FormLabel>
                 <FormControl>
                   <Input type="password" {...field} />
                 </FormControl>
@@ -107,7 +90,7 @@ export function SignupForm({
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>Confirm New Password</FormLabel>
                 <FormControl>
                   <Input type="password" {...field} />
                 </FormControl>
@@ -116,14 +99,13 @@ export function SignupForm({
             )}
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Sign up"}
+            {isLoading ? "Resetting password..." : "Reset password"}
           </Button>
         </form>
       </Form>
       <div className="text-center text-sm">
-        Already have an account?{" "}
         <a href="/login" className="underline underline-offset-4">
-          Login
+          Back to login
         </a>
       </div>
     </div>

@@ -33,8 +33,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,12 +44,14 @@ export function LoginForm({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setError(null);
-    
+
     const result = await login(values.email, values.password);
-    
+
     if (result.error) {
-      setError(result.error);
+      form.setError("email", {
+        type: "manual",
+        message: result.error
+      });
       setIsLoading(false);
     } else {
       router.push("/");
@@ -66,9 +67,6 @@ export function LoginForm({
           Enter your email below to login to your account
         </p>
       </div>
-      {error && (
-        <div className="text-sm text-red-500 text-center">{error}</div>
-      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
           <FormField
@@ -92,7 +90,7 @@ export function LoginForm({
                 <div className="flex items-center">
                   <FormLabel>Password</FormLabel>
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
